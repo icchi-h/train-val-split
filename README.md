@@ -10,7 +10,7 @@
 .
 ├── README.md
 ├── train_val_split.py
-├── input
+└── input
      ├── class1
      │   ├── class1_1.jpg
      │   ├── class1_2.jpg
@@ -24,7 +24,7 @@
      ├── class3
      │   ├── class3_1.jpg
      │   ├── class3_2.jpg
-     │   └── class3_3.jpg
+     │   ├── class3_3.jpg
      │    ...
       ...
 ```
