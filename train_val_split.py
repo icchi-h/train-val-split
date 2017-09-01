@@ -49,7 +49,7 @@ def output_class_samples_csv(path):
             continue
 
         # 書き込み
-        files = np.sort(glob.glob(os.path.join(class_path, '*.*g')))
+        files = np.sort(glob.glob(os.path.join(class_path, '*.*[gG]')))
         class_image_count = len(files)
         f.write(tclass + "," + str(class_image_count) + "\n")
 
@@ -150,7 +150,7 @@ for tclass in classes:
         continue
 
     print("Class: " + tclass + " ---------------------------------")
-    files = np.sort(glob.glob(os.path.join(class_path, '*.*g')))
+    files = np.sort(glob.glob(os.path.join(class_path, '*.*[gG]')))
     class_image_count = len(files)
     print("\tFound images:", class_image_count)
     # print(files)
