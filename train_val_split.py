@@ -7,7 +7,7 @@ __doc__
 """
 
 __author__ = "Haruyuki Ichino"
-__version__ = "1.1"
+__version__ = "1.2"
 __date__ = "2017/09/01"
 
 print(__doc__)
@@ -19,6 +19,7 @@ import numpy as np
 import random
 import shutil
 import argparse
+import csv
 
 
 # 入出力ディレクトリ
@@ -26,7 +27,52 @@ INPUT_DIR = "./input/"
 OUTPUT_DIR = "./output/"
 TRAIN_DIR = "train_images"
 VAL_DIR = "val_images"
+OUTPUT_CSV_FILE = './output-class-samples.csv'
 
+
+def output_class_samples_csv(path):
+    # ファイル出力の準備
+    f = open(OUTPUT_CSV_FILE, 'w')
+
+    # 各クラスディレクトリにアクセス
+    classes = np.sort(os.listdir(path))
+    for tclass in classes:
+
+        # .DS_Storeのチェック
+        if tclass == ".DS_Store":
+            continue
+
+        class_path = os.path.join(INPUT_DIR, tclass)
+
+        # ディレクトリじゃない場合はスキップ
+        if not os.path.isdir(class_path):
+            continue
+
+        # 書き込み
+        files = np.sort(glob.glob(os.path.join(class_path, '*.*g')))
+        class_image_count = len(files)
+        f.write(tclass + "," + str(class_image_count) + "\n")
+
+    f.close()
+
+def get_csv_dict(csv_path):
+
+    # クラス毎の出力サンプル数
+    class_samples = {}
+
+    f = open(csv_path, 'r')
+    reader = csv.reader(f)
+    for row in reader:
+        class_samples[row[0]] = int(row[1]) if not row[1] is '' else 0
+    f.close()
+
+    return class_samples
+
+# csv出力コマンドの処理
+if (len(sys.argv) == 2 and sys.argv[1] == "out"):
+    output_class_samples_csv(INPUT_DIR)
+    print("Saved: class samples csv file")
+    sys.exit(0)
 
 # オプションの設定
 parser = argparse.ArgumentParser()
@@ -48,11 +94,25 @@ parser.add_argument(
     default=0,
     help="出力する各クラスの訓練データサンプル数。"
 )
+parser.add_argument(
+    "--csv",
+    type=str,
+    default=None,
+    help="出力する各クラスの訓練データサンプル数を記述したcsvファイル。"
+)
 FLAGS, unparsed = parser.parse_known_args()
-if (FLAGS.min):
-    print("最低サンプル数:", FLAGS.min)
-if (FLAGS.min):
+if FLAGS.sample_num:
     print("訓練サンプル数:", FLAGS.sample_num)
+if FLAGS.min:
+    print("最低サンプル数:", FLAGS.min)
+if FLAGS.csv:
+    if os.path.exists(FLAGS.csv):
+        print("サンプル数管理csv:", FLAGS.csv)
+        class_samples = get_csv_dict(FLAGS.csv)
+        print(class_samples)
+    else:
+        print("Error: Not found specified csv file >", FLAGS.csv)
+        sys.exit(0)
 
 # 入出力ディレクトリの存在確認
 if not os.path.exists(INPUT_DIR):
@@ -97,10 +157,14 @@ for tclass in classes:
     # print()
 
     # サンプル数のチェック
+    if FLAGS.csv:
+        if tclass in class_samples and class_image_count < int(class_samples[tclass] / FLAGS.train_rate):
+            print("\tError: サンプル数が指定サンプル数に達していません")
+            continue
     if (class_image_count < int(FLAGS.sample_num / FLAGS.train_rate)):
         print("\tError: サンプル数が指定サンプル数に達していません")
         continue
-    if (class_image_count < FLAGS.min):
+    if class_image_count < FLAGS.min:
         print("\tError: 最低サンプル数に達していません")
         continue
 
@@ -117,7 +181,11 @@ for tclass in classes:
     random.shuffle(files)
 
     # 学習用ファイルと検証用ファイルリスト
-    if (not FLAGS.sample_num):
+    if tclass in class_samples:
+        val_sample_num = int(class_samples[tclass] / FLAGS.train_rate) - class_samples[tclass]
+        train_images = files[:class_samples[tclass]]
+        val_images = files[class_samples[tclass]:class_samples[tclass]+val_sample_num]
+    elif not FLAGS.sample_num:
         split_index = int(class_image_count * FLAGS.train_rate)
         train_images = files[:split_index]
         val_images = files[split_index:]
