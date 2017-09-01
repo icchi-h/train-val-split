@@ -1,9 +1,12 @@
 # Split image data to training and validation
-クラス別に分類された画像データを一定の割合でランダムにTraining用とValidation用に分けるスクリプト
+クラス別に分類された画像データを特定の割合でランダムにTraining用とValidation用に分けるスクリプト
 
+オプションで以下の機能を利用可能
+- 分割する割合の指定
+- 各クラスの出力サンプル数の統一
+- 特定サンプル数以上のクラスのみ処理
 
 ## 使い方
-
 ### ディレクトリ構造
 以下のようなディレクトリ構造に入力画像をセット
 ```
@@ -30,6 +33,26 @@
 ```
 
 ### 実行
+
+#### Options
+| Option       | Description                        | Default parameter |
+|:-------------|:-----------------------------------|:------------------|
+| --train_rate | 入力データから訓練用に利用する割合 | 0.9               |
+| --sample_num | 出力される各クラスのサンプル数     | 0 (無効)          |
+| --min        | サンプル数がこの値以下の時処理をスキップ | 0 (無効)    |
+
+#### Example
+すべてのクラスに対して、指定の割合で分割する場合
 ```bash
 python train_val_split.py
+```
+
+出力する訓練用サンプル数を300で統一したい場合
+```bash
+python train_val_split.py --sample_num 300
+```
+
+サンプル数が200以上のクラスに対して、分割する場合
+```bash
+python train_val_split.py --min 200
 ```
