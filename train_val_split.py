@@ -7,8 +7,8 @@ __doc__
 """
 
 __author__ = "Haruyuki Ichino"
-__version__ = "1.2"
-__date__ = "2017/09/01"
+__version__ = "1.3"
+__date__ = "2017/09/08"
 
 print(__doc__)
 
@@ -23,8 +23,6 @@ import csv
 
 
 # 入出力ディレクトリ
-INPUT_DIR = "./input/"
-OUTPUT_DIR = "./output/"
 TRAIN_DIR = "train_images"
 VAL_DIR = "val_images"
 OUTPUT_CSV_FILE = './output-class-samples.csv'
@@ -42,7 +40,7 @@ def output_class_samples_csv(path):
         if tclass == ".DS_Store":
             continue
 
-        class_path = os.path.join(INPUT_DIR, tclass)
+        class_path = os.path.join(FLAGS.input_path, tclass)
 
         # ディレクトリじゃない場合はスキップ
         if not os.path.isdir(class_path):
@@ -68,14 +66,21 @@ def get_csv_dict(csv_path):
 
     return class_samples
 
-# csv出力コマンドの処理
-if (len(sys.argv) == 2 and sys.argv[1] == "out"):
-    output_class_samples_csv(INPUT_DIR)
-    print("Saved: class samples csv file")
-    sys.exit(0)
 
 # オプションの設定
 parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--input_path",
+    type=str,
+    default="./input/",
+    help="Input directory path."
+)
+parser.add_argument(
+    "--output_path",
+    type=str,
+    default="./output/",
+    help="Output directory path."
+)
 parser.add_argument(
     "--train_rate",
     type=float,
@@ -101,6 +106,13 @@ parser.add_argument(
     help="出力する各クラスの訓練データサンプル数を記述したcsvファイル。"
 )
 FLAGS, unparsed = parser.parse_known_args()
+
+# csv出力コマンドの処理
+if "out" in sys.argv:
+    output_class_samples_csv(FLAGS.input_path)
+    print("Saved: class samples csv file")
+    sys.exit(0)
+
 if FLAGS.sample_num:
     print("訓練サンプル数:", FLAGS.sample_num)
 if FLAGS.min:
@@ -115,14 +127,14 @@ if FLAGS.csv:
         sys.exit(0)
 
 # 入出力ディレクトリの存在確認
-if not os.path.exists(INPUT_DIR):
+if not os.path.exists(FLAGS.input_path):
     print("Error: Not found input directory")
-    os.mkdir(INPUT_DIR)
+    os.mkdir(FLAGS.input_path)
     sys.exit(1)
-if not os.path.exists(OUTPUT_DIR):
-    os.mkdir(OUTPUT_DIR)
-output_train_path = os.path.join(OUTPUT_DIR, TRAIN_DIR)
-output_val_path = os.path.join(OUTPUT_DIR, VAL_DIR)
+if not os.path.exists(FLAGS.output_path):
+    os.mkdir(FLAGS.output_path)
+output_train_path = os.path.join(FLAGS.output_path, TRAIN_DIR)
+output_val_path = os.path.join(FLAGS.output_path, VAL_DIR)
 if not os.path.exists(output_train_path):
     os.mkdir(output_train_path)
 if not os.path.exists(output_val_path):
@@ -136,14 +148,14 @@ val_image_count = 0
 print()
 
 # 各クラスディレクトリ
-classes = np.sort(os.listdir(INPUT_DIR))
+classes = np.sort(os.listdir(FLAGS.input_path))
 for tclass in classes:
 
     # .DS_Storeのチェック
     if tclass == ".DS_Store":
         continue
 
-    class_path = os.path.join(INPUT_DIR, tclass)
+    class_path = os.path.join(FLAGS.input_path, tclass)
 
     # ディレクトリじゃない場合はスキップ
     if not os.path.isdir(class_path):
