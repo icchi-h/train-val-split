@@ -7,8 +7,8 @@ __doc__
 """
 
 __author__ = "Haruyuki Ichino"
-__version__ = "1.3"
-__date__ = "2017/09/08"
+__version__ = "1.4"
+__date__ = "2017/09/13"
 
 print(__doc__)
 
@@ -192,19 +192,24 @@ for tclass in classes:
     # 画像リストをシャッフル
     random.shuffle(files)
 
-    # 学習用ファイルと検証用ファイルリスト
-    if tclass in class_samples:
-        val_sample_num = int(class_samples[tclass] / FLAGS.train_rate) - class_samples[tclass]
-        train_images = files[:class_samples[tclass]]
-        val_images = files[class_samples[tclass]:class_samples[tclass]+val_sample_num]
-    elif not FLAGS.sample_num:
-        split_index = int(class_image_count * FLAGS.train_rate)
-        train_images = files[:split_index]
-        val_images = files[split_index:]
+    # 学習用ファイルと検証用ファイルリストの作成
+    # csvファイルを使うする場合
+    if FLAGS.csv:
+        if tclass in class_samples:
+            val_sample_num = int(class_samples[tclass] / FLAGS.train_rate) - class_samples[tclass]
+            train_images = files[:class_samples[tclass]]
+            val_images = files[class_samples[tclass]:class_samples[tclass]+val_sample_num]
     else:
-        val_sample_num = int(FLAGS.sample_num / FLAGS.train_rate) - FLAGS.sample_num
-        train_images = files[:FLAGS.sample_num]
-        val_images = files[FLAGS.sample_num:FLAGS.sample_num+val_sample_num]
+        # 訓練サンプル数が指定されている場合
+        if FLAGS.sample_num:
+        # 分割Rateにしたがって分割する場合
+            val_sample_num = int(FLAGS.sample_num / FLAGS.train_rate) - FLAGS.sample_num
+            train_images = files[:FLAGS.sample_num]
+            val_images = files[FLAGS.sample_num:FLAGS.sample_num+val_sample_num]
+        else:
+            split_index = int(class_image_count * FLAGS.train_rate)
+            train_images = files[:split_index]
+            val_images = files[split_index:]
     print("\tTrain images:", len(train_images))
     # print(train_images)
     print("\tVal images:", len(val_images))
